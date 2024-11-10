@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "426674555437",
+    "project_id": "arcore-944e3",
+    "storage_bucket": "arcore-944e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:426674555437:android:d328f9b6e7f90a0126c6a4",
+        "android_client_info": {
+          "package_name": "com.example.arcore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPqsJZEodz7gsbFeqG7-T4-iWcpue0JU4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
