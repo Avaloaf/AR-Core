@@ -1,5 +1,6 @@
 package com.example.arcore
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -8,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -17,9 +19,14 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun LoginScreen(navController: NavController, auth: FirebaseAuth) {
+fun NewAccountScreen(navController: NavController, auth: FirebaseAuth) {
+    val context = LocalContext.current
+
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
     Column(
@@ -29,9 +36,25 @@ fun LoginScreen(navController: NavController, auth: FirebaseAuth) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("InteriAR", fontSize = 30.sp, modifier = Modifier.padding(bottom = 16.dp))
+        Text("InteriAR - Register", fontSize = 30.sp, modifier = Modifier.padding(bottom = 16.dp))
 
-        Text("Login", fontSize = 24.sp)
+        TextField(
+            value = firstName,
+            onValueChange = { firstName = it },
+            label = { Text("First Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextField(
+            value = lastName,
+            onValueChange = { lastName = it },
+            label = { Text("Last Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         TextField(
             value = email,
@@ -52,6 +75,16 @@ fun LoginScreen(navController: NavController, auth: FirebaseAuth) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        TextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Confirm Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = Color.Red)
         }
@@ -60,43 +93,39 @@ fun LoginScreen(navController: NavController, auth: FirebaseAuth) {
 
         Button(
             onClick = {
-                if (email.isEmpty() || password.isEmpty()) {
-                    errorMessage = "Email and password cannot be empty."
+                if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+                    errorMessage = "All fields must be filled."
+                } else if (password != confirmPassword) {
+                    errorMessage = "Passwords do not match."
                 } else {
-                    // Authenticate with Firebase
-                    auth.signInWithEmailAndPassword(email, password)
+                    errorMessage = ""
+                    auth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                navController.navigate("home")
+                                Toast.makeText(context, "Account created", Toast.LENGTH_LONG).show()
+                                navController.navigate("login") {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = true
+                                    }
+                                }
                             } else {
-                                errorMessage = task.exception?.message ?: "Login failed."
+                                errorMessage = task.exception?.message ?: "Account creation failed."
                             }
                         }
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Login")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                navController.navigate("new_account")
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Create New Account")
+            Text("Register")
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun LoginScreenPreview() {
+fun NewAccountScreenPreview() {
     val navController = rememberNavController()
     val auth = FirebaseAuth.getInstance() // Mock for preview
 
-    LoginScreen(navController, auth)
+    NewAccountScreen(navController, auth)
 }

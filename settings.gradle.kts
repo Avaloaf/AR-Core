@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ARcore"
+rootProject.name = "Arcore"
 include(":app")
  
