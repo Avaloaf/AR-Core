@@ -38,18 +38,6 @@ fun HomePageScreen(navController: NavController) {
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             },
-            actions = {
-                IconButton(onClick = {
-                    // Navigate to Profile or any desired action
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = Color.Black
-                    )
-                }
-            },
-
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -115,12 +103,10 @@ fun HomePageScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            IconButton(onClick = {
-                // Placeholder for another action
-            }) {
+            IconButton(onClick = { navController.navigate("account") }) {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
+                    contentDescription = "Account",
                     tint = Color.Black
                 )
             }
@@ -136,6 +122,13 @@ fun HomePageScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(16.dp)
             )
+        }
+
+        Button(
+            onClick = { navController.navigate("catalog") },
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Browse Catalog")
         }
     }
 }

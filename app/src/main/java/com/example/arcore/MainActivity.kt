@@ -49,6 +49,8 @@ fun AppNavigator(navController: androidx.navigation.NavHostController, auth: Fir
         composable("login") { LoginScreen(navController, auth) }
         composable("new_account") { NewAccountScreen(navController, auth) }
         composable("home") { HomePageScreen(navController) }
+        composable("catalog") { CatalogScreen(navController) }
+        composable("account") { AccountScreen(navController) }
     }
 }
 

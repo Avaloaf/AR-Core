@@ -5,7 +5,7 @@ buildscript {
     }
     dependencies {
         classpath("com.google.gms:google-services:4.3.15") // Use the latest version
-        classpath("com.android.tools.build:gradle:8.1.4") // Update if needed
+        classpath("com.android.tools.build:gradle:8.7.2") // Update if needed
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
     }
 }
