@@ -2,18 +2,72 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
+    <!-- AR Scene View -->
+    <io.github.sceneview.ar.ArSceneView
+        android:id="@+id/sceneView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <!-- Place Button -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/place"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:textSize="20sp"
+        android:textAlignment="center"
+        android:text="Place"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.863" />
+
+    <!-- Chair Button -->
+    <Button
+        android:id="@+id/btn_chair"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chair"
+        app:layout_constraintTop_toBottomOf="@id/place"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.1" />
+
+    <!-- Sofa Button -->
+    <Button
+        android:id="@+id/btn_sofa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sofa"
+        app:layout_constraintTop_toBottomOf="@id/btn_chair"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.1" />
+
+    <!-- Dressing Table Button -->
+    <Button
+        android:id="@+id/btn_dressing_table"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dressing Table"
+        app:layout_constraintTop_toBottomOf="@id/btn_sofa"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.1" />
+
+    <!-- Table Football Button -->
+    <Button
+        android:id="@+id/btn_table_football"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Table Football"
+        app:layout_constraintTop_toBottomOf="@id/btn_dressing_table"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.1" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
