@@ -52,8 +52,8 @@ fun HomePageScreen(navController: NavController) {
         // Big plus sign button
         IconButton(
             onClick = {
-                // Navigate to project creation screen or any desired action
-                navController.navigate("create_project")
+                // Navigate to ARScreen
+                navController.navigate("ar_screen")
             },
             modifier = Modifier
                 .size(100.dp)
@@ -61,7 +61,7 @@ fun HomePageScreen(navController: NavController) {
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Create New Project",
+                contentDescription = "Navigate to ARScreen",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(100.dp)
             )
