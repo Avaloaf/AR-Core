@@ -52,12 +52,20 @@ fun AppNavigator(navController: NavHostController, auth: FirebaseAuth) {
         composable("home") { HomePageScreen(navController) }
         composable("catalog") { CatalogScreen(navController) }
         composable("account") { AccountScreen(navController) }
-        composable("ar_screen") {
-            // Navigate to ARScreen Activity
+
+        // Navigate to ARScreen Activity with optional anchorId parameter
+        composable("ar_screen?anchorId={anchorId}") { backStackEntry ->
+            val anchorId = backStackEntry.arguments?.getString("anchorId")
+
+            // Navigate to ARScreen activity and pass the anchorId
             val context = LocalContext.current
             LaunchedEffect(Unit) {
-                context.startActivity(Intent(context, ARScreen::class.java))
+                val intent = Intent(context, ARScreen::class.java).apply {
+                    putExtra("anchorId", anchorId)
+                }
+                context.startActivity(intent)
             }
         }
     }
 }
+

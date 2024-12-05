@@ -2,55 +2,88 @@ package com.example.arcore
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
+import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isGone
+import com.google.ar.core.Anchor
 import com.google.ar.core.Config
-import io.github.sceneview.ar.ArSceneView
-import io.github.sceneview.ar.node.ArModelNode
-import io.github.sceneview.math.Position
-import io.github.sceneview.ar.node.PlacementMode
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-import io.github.sceneview.node.VideoNode
+import com.google.ar.core.Session
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import android.util.Log
+import io.github.sceneview.ar.ArSceneView
+import io.github.sceneview.ar.node.ArModelNode
+import io.github.sceneview.ar.node.PlacementMode
+import io.github.sceneview.math.Position
+import io.github.sceneview.node.VideoNode
 import java.io.ByteArrayOutputStream
 import java.util.UUID
-import android.widget.Toast
-import android.widget.Button
 
 class ARScreen : AppCompatActivity() {
 
     private lateinit var sceneView: ArSceneView
-    private lateinit var placeButton: ExtendedFloatingActionButton
+    private lateinit var placeButton: Button
+    private lateinit var resolveButton: Button
     private lateinit var modelNode: ArModelNode
     private lateinit var videoNode: VideoNode
     private lateinit var mediaPlayer: MediaPlayer
+    private lateinit var session: Session
+    private var currentAnchor: Anchor? = null
 
-    // Define a list of available models
     private val modelList = listOf("chair", "sofa", "dressing_table", "table_football")
-    private var selectedModelIndex = 0  // Default to the first model
+    private var selectedModelIndex = 0
+    private var receivedAnchorId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Get the anchor ID from intent extras (if any)
+        receivedAnchorId = intent.getStringExtra("anchorId")
+
+        // Initialize the scene view
         sceneView = findViewById<ArSceneView>(R.id.sceneView).apply {
             this.lightEstimationMode = Config.LightEstimationMode.DISABLED
         }
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.ad)
+        // Ensure the AR session is initialized
+        sceneView.onArSessionCreated = { arSession ->
+            session = arSession
+            session.configure(
+                Config(session).apply {
+                    cloudAnchorMode = Config.CloudAnchorMode.ENABLED
+                }
+            )
 
-        placeButton = findViewById(R.id.place)
-
-        placeButton.setOnClickListener {
-            placeModel()
-            captureScreenshotAndUpload()  // Capture screenshot after placing model
+            // If an anchor ID was provided, resolve it
+            receivedAnchorId?.let { resolveCloudAnchor(it) }
         }
 
+        // Initialize media player for video node
+        mediaPlayer = MediaPlayer.create(this, R.raw.ad)
+
+        // Initialize UI elements
+        placeButton = findViewById(R.id.place)
+        resolveButton = findViewById(R.id.resolveButton)
+
+        // Place model and host anchor
+        placeButton.setOnClickListener {
+            placeModel()
+            currentAnchor?.let {
+                hostCloudAnchor(it)
+            } ?: Toast.makeText(this, "No anchor to host!", Toast.LENGTH_SHORT).show()
+        }
+
+        // Resolve Cloud Anchor when button clicked
+        resolveButton.setOnClickListener {
+            val anchorId = "EXAMPLE_ANCHOR_ID" // Replace with actual ID
+            resolveCloudAnchor(anchorId)
+        }
+
+        // Initialize video and model nodes
         videoNode = VideoNode(
             sceneView.engine,
             scaleToUnits = 0.7f,
@@ -60,12 +93,11 @@ class ARScreen : AppCompatActivity() {
             onLoaded = { _, _ -> mediaPlayer.start() }
         )
 
-        // Initially load the first model (chair)
         loadModel(modelList[selectedModelIndex])
 
         modelNode = ArModelNode(sceneView.engine, PlacementMode.INSTANT).apply {
             loadModelGlbAsync(
-                glbFileLocation = "models/chair.glb", // Default model (chair)
+                glbFileLocation = "models/chair.glb",
                 scaleToUnits = 1f,
                 centerOrigin = Position(-0.5f)
             ) {
@@ -73,25 +105,18 @@ class ARScreen : AppCompatActivity() {
             }
             onAnchorChanged = {
                 placeButton.isGone = it != null
+                currentAnchor = it
             }
         }
 
         sceneView.addChild(modelNode)
         modelNode.addChild(videoNode)
 
-        // Add model selection buttons
-        findViewById<Button>(R.id.btn_chair).setOnClickListener {
-            selectModel(0)  // Chair model selected
-        }
-        findViewById<Button>(R.id.btn_sofa).setOnClickListener {
-            selectModel(1)  // Sofa model selected
-        }
-        findViewById<Button>(R.id.btn_dressing_table).setOnClickListener {
-            selectModel(2)  // Dressing table model selected
-        }
-        findViewById<Button>(R.id.btn_table_football).setOnClickListener {
-            selectModel(3)  // Table football model selected
-        }
+        // Model selection buttons
+        findViewById<Button>(R.id.btn_chair).setOnClickListener { selectModel(0) }
+        findViewById<Button>(R.id.btn_sofa).setOnClickListener { selectModel(1) }
+        findViewById<Button>(R.id.btn_dressing_table).setOnClickListener { selectModel(2) }
+        findViewById<Button>(R.id.btn_table_football).setOnClickListener { selectModel(3) }
     }
 
     private fun placeModel() {
@@ -99,11 +124,10 @@ class ARScreen : AppCompatActivity() {
         sceneView.planeRenderer.isVisible = false
     }
 
-    // Function to dynamically load the selected model
     private fun loadModel(modelName: String) {
         modelNode = ArModelNode(sceneView.engine, PlacementMode.INSTANT).apply {
             loadModelGlbAsync(
-                glbFileLocation = "models/$modelName.glb",  // Load model based on selected name
+                glbFileLocation = "models/$modelName.glb",
                 scaleToUnits = 1f,
                 centerOrigin = Position(-0.5f)
             ) {
@@ -111,34 +135,60 @@ class ARScreen : AppCompatActivity() {
             }
             onAnchorChanged = {
                 placeButton.isGone = it != null
+                currentAnchor = it
             }
         }
         sceneView.addChild(modelNode)
         modelNode.addChild(videoNode)
     }
 
-    // Function to change the selected model (called by buttons)
     private fun selectModel(index: Int) {
         if (index in modelList.indices) {
             selectedModelIndex = index
             Toast.makeText(this, "Selected Model: ${modelList[selectedModelIndex]}", Toast.LENGTH_SHORT).show()
-            loadModel(modelList[selectedModelIndex])  // Load the new model
+            loadModel(modelList[selectedModelIndex])
         }
     }
 
-    // Function to capture screenshot and upload to Firebase
+    private fun hostCloudAnchor(anchor: Anchor) {
+        session.hostCloudAnchor(anchor).also { cloudAnchor ->
+            monitorCloudAnchorState(cloudAnchor)
+        }
+    }
+
+    private fun resolveCloudAnchor(anchorId: String) {
+        session.resolveCloudAnchor(anchorId).also { resolvedAnchor ->
+            monitorCloudAnchorState(resolvedAnchor)
+        }
+    }
+
+    private fun monitorCloudAnchorState(anchor: Anchor) {
+        when (anchor.cloudAnchorState) {
+            Anchor.CloudAnchorState.SUCCESS -> {
+                Toast.makeText(this, "Cloud Anchor hosted/resolved!", Toast.LENGTH_SHORT).show()
+                currentAnchor = anchor
+            }
+            Anchor.CloudAnchorState.ERROR_NOT_AUTHORIZED -> {
+                Toast.makeText(this, "Authorization error!", Toast.LENGTH_SHORT).show()
+            }
+            Anchor.CloudAnchorState.ERROR_SERVICE_UNAVAILABLE -> {
+                Toast.makeText(this, "Service unavailable. Try again.", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                Log.d("ARScreen", "Cloud Anchor State: ${anchor.cloudAnchorState}")
+            }
+        }
+    }
+
     private fun captureScreenshotAndUpload() {
-        // Capture screenshot from the AR scene
         val bitmap = Bitmap.createBitmap(sceneView.width, sceneView.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         sceneView.draw(canvas)
 
-        // Convert the Bitmap to a byte array
         val baos = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
         val data = baos.toByteArray()
 
-        // Upload the image to Firebase Storage
         uploadToFirebase(data)
     }
 
@@ -146,7 +196,6 @@ class ARScreen : AppCompatActivity() {
         val storageReference: StorageReference = FirebaseStorage.getInstance().reference
         val imageRef = storageReference.child("images/${UUID.randomUUID()}.png")
 
-        // Upload the image
         val uploadTask = imageRef.putBytes(imageData)
         uploadTask.addOnSuccessListener {
             Log.d("ARScreen", "Image uploaded successfully.")

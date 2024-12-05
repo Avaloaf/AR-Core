@@ -16,6 +16,7 @@ core = "1.17.1"
 sceneformUx = "1.17.1"
 firebaseDatabaseKtx = "21.0.0"
 firebaseStorageKtx = "21.0.1"
+coreVersion = "1.46.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +34,7 @@ core = { group = "com.google.ar.sceneform", name = "core", version.ref = "core" 
 sceneform-ux = { group = "com.google.ar.sceneform.ux", name = "sceneform-ux", version.ref = "sceneformUx" }
 firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+ar-core = { group = "com.google.ar", name = "core", version.ref = "coreVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

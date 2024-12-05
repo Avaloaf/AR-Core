@@ -60,6 +60,7 @@
         app:layout_constraintVertical_bias="0.1" />
 
     <!-- Table Football Button -->
+
     <Button
         android:id="@+id/btn_table_football"
         android:layout_width="wrap_content"
@@ -69,5 +70,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.1" />
+
+    <Button
+        android:id="@+id/resolveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resolve Cloud Anchor"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="8dp"
+        tools:ignore="MissingConstraints" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,12 +16,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePageScreen(navController: NavController) {
     var showSearchBar by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -52,7 +54,7 @@ fun HomePageScreen(navController: NavController) {
         // Big plus sign button
         IconButton(
             onClick = {
-                // Navigate to ARScreen
+                // Navigate to ARScreen for a new project
                 navController.navigate("ar_screen")
             },
             modifier = Modifier
@@ -65,6 +67,37 @@ fun HomePageScreen(navController: NavController) {
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(100.dp)
             )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Button to join an existing session
+        Button(
+            onClick = {
+                isLoading = true
+                FirebaseManager.fetchLatestAnchorId(
+                    onSuccess = { anchorId ->
+                        isLoading = false
+                        navController.navigate("ar_screen?anchorId=$anchorId")
+                    },
+                    onError = { error ->
+                        isLoading = false
+                        Toast.makeText(navController.context, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Text("Join Existing Session")
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))
