@@ -78,6 +78,7 @@ fun HomePageScreen(navController: NavController) {
                 FirebaseManager.fetchLatestAnchorId(
                     onSuccess = { anchorId ->
                         isLoading = false
+                        // Navigate to ARScreen and pass the anchorId
                         navController.navigate("ar_screen?anchorId=$anchorId")
                     },
                     onError = { error ->
@@ -165,6 +166,7 @@ fun HomePageScreen(navController: NavController) {
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        FirebaseAuth.getInstance().signOut()
         // Initialize Firebase
         FirebaseApp.initializeApp(this)
         firestore = FirebaseFirestore.getInstance()
@@ -68,4 +69,3 @@ fun AppNavigator(navController: NavHostController, auth: FirebaseAuth) {
         }
     }
 }
-

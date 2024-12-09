@@ -10,7 +10,7 @@
     <io.github.sceneview.ar.ArSceneView
         android:id="@+id/sceneView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
     <!-- Place Button -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
@@ -23,62 +23,85 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.863" />
 
-    <!-- Chair Button -->
+    <!-- Capture Button (Above Scrollable Buttons) -->
     <Button
-        android:id="@+id/btn_chair"
+        android:id="@+id/captureButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Chair"
+        android:text="Capture"
         app:layout_constraintTop_toBottomOf="@id/place"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.1" />
+        app:layout_constraintVertical_bias="0.1"
+        android:layout_marginTop="16dp" />
 
-    <!-- Sofa Button -->
+    <!-- Capture Button (Above Scrollable Buttons) -->
     <Button
-        android:id="@+id/btn_sofa"
+        android:id="@+id/hostAnchorButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sofa"
-        app:layout_constraintTop_toBottomOf="@id/btn_chair"
+        android:text="hostAnchor"
+        app:layout_constraintTop_toBottomOf="@id/place"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.1" />
+        app:layout_constraintVertical_bias="0.1"
+        android:layout_marginTop="16dp" />
 
-    <!-- Dressing Table Button -->
-    <Button
-        android:id="@+id/btn_dressing_table"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Dressing Table"
-        app:layout_constraintTop_toBottomOf="@id/btn_sofa"
+
+    <!-- Scrollable Buttons Section -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.1" />
+        app:layout_constraintTop_toBottomOf="@id/captureButton"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="8dp">
 
-    <!-- Table Football Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
 
-    <Button
-        android:id="@+id/btn_table_football"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Table Football"
-        app:layout_constraintTop_toBottomOf="@id/btn_dressing_table"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.1" />
+            <!-- Chair Button -->
+            <Button
+                android:id="@+id/btn_chair"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chair" />
 
-    <Button
-        android:id="@+id/resolveButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Resolve Cloud Anchor"
-        android:layout_gravity="center_horizontal"
-        android:layout_margin="8dp"
-        tools:ignore="MissingConstraints" />
+            <!-- Sofa Button -->
+            <Button
+                android:id="@+id/btn_sofa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sofa" />
 
+            <!-- Dressing Table Button -->
+            <Button
+                android:id="@+id/btn_dressing_table"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dressing Table" />
+
+            <!-- Table Football Button -->
+            <Button
+                android:id="@+id/btn_table_football"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Table Football" />
+
+            <!-- Resolve Button -->
+            <Button
+                android:id="@+id/resolveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resolve Cloud Anchor" />
+
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
