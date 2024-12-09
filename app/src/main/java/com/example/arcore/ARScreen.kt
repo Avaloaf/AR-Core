@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
+import android.view.MotionEvent
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -40,6 +42,8 @@ class ARScreen : AppCompatActivity() {
     private val modelList = listOf("chair", "sofa", "dressing_table", "table_football")
     private var selectedModelIndex = 0
     private var receivedAnchorId: String? = null
+
+    private var isModelPlaced = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,8 +90,8 @@ class ARScreen : AppCompatActivity() {
 
         // Resolve Cloud Anchor when button clicked
         resolveButton.setOnClickListener {
-            val anchorId = "EXAMPLE_ANCHOR_ID" // Replace with actual ID
-            resolveCloudAnchor(anchorId)
+            val anchorId = receivedAnchorId // Use receivedAnchorId if it's available
+            anchorId?.let { resolveCloudAnchor(it) }
         }
 
         // Add the new capture button functionality
@@ -97,9 +101,15 @@ class ARScreen : AppCompatActivity() {
 
         // Host Cloud Anchor when button clicked
         hostAnchorButton.setOnClickListener {
-            currentAnchor?.let {
-                hostCloudAnchor(it)
-            } ?: Toast.makeText(this, "No model placed to host!", Toast.LENGTH_SHORT).show()
+            if (isModelPlaced) {
+                currentAnchor?.let {
+                    // If the model is placed and there's a valid anchor, host it
+                    hostCloudAnchor(it)
+                    Toast.makeText(this, "Model is placed!", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "Model is not placed yet!", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Initialize video and model nodes
@@ -119,13 +129,46 @@ class ARScreen : AppCompatActivity() {
         findViewById<Button>(R.id.btn_sofa).setOnClickListener { selectModel(1) }
         findViewById<Button>(R.id.btn_dressing_table).setOnClickListener { selectModel(2) }
         findViewById<Button>(R.id.btn_table_football).setOnClickListener { selectModel(3) }
+
+        // Touch listener for moving the model
+        sceneView.setOnTouchListener { _, event ->
+            if (!isModelPlaced) {
+                handleTouch(event)
+            }
+            true
+        }
     }
 
     private fun placeModel() {
+        // Display a Toast message for indicating the process has started
+        Toast.makeText(this, "Placing model...", Toast.LENGTH_SHORT).show()
+
         // Detach the current anchor if it exists
-        modelNode.anchor?.detach() // Detach existing anchor
-        modelNode.anchor() // Create a new anchor for the current placement
-        sceneView.planeRenderer.isVisible = false
+        modelNode.anchor?.detach()
+
+        // Check if the AR session has a valid plane to place the anchor
+        val frame = session.update()
+        val hitTestResults = frame.hitTest(sceneView.width / 2f, sceneView.height / 2f)
+
+        // If hit test returns a valid result, create an anchor
+        if (hitTestResults.isNotEmpty()) {
+            val hitResult = hitTestResults[0]  // Pick the first valid hit result
+            val pose = hitResult.hitPose
+            currentAnchor = session.createAnchor(pose)  // Create the anchor and assign it to currentAnchor
+
+            // Create a new ArModelNode and associate it with the newly created anchor
+            modelNode.anchor = currentAnchor
+            sceneView.addChild(modelNode)
+
+            // Show a success message using a Toast
+            Toast.makeText(this, "Anchor placed successfully!", Toast.LENGTH_SHORT).show()
+
+            // Mark model as placed
+            isModelPlaced = true
+        } else {
+            // Show a failure message using a Toast
+            Toast.makeText(this, "Failed to place anchor. Try again.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun loadModel(modelName: String) {
@@ -153,6 +196,20 @@ class ARScreen : AppCompatActivity() {
         }
     }
 
+    private fun handleTouch(event: MotionEvent) {
+        // Perform hit testing to get a new pose based on touch event location
+        val frame = session.update()
+        val hitTestResults = frame.hitTest(event.x, event.y)
+
+        if (hitTestResults.isNotEmpty()) {
+            val hitResult = hitTestResults[0]  // Pick the first valid hit result
+            val pose = hitResult.hitPose
+
+            // Update model position to follow the touch
+            modelNode.position = Position(pose.tx(), pose.ty(), pose.tz())
+        }
+    }
+
     private fun selectModel(index: Int) {
         if (index in modelList.indices) {
             selectedModelIndex = index
@@ -162,16 +219,48 @@ class ARScreen : AppCompatActivity() {
     }
 
     private fun hostCloudAnchor(anchor: Anchor) {
-        session.hostCloudAnchor(anchor).also { cloudAnchor ->
-            monitorCloudAnchorState(cloudAnchor) // Monitor the state as before
+        // Host the cloud anchor
+        val cloudAnchor = session.hostCloudAnchor(anchor)
+        val handler = Handler() // Used to manage timeout and retries
+        val startTime = System.currentTimeMillis() // Record the start time
+        val timeout = 10000L // Timeout in milliseconds (10 seconds)
 
-            // Save to Firebase when the anchor is successfully hosted
-            if (cloudAnchor.cloudAnchorState == Anchor.CloudAnchorState.SUCCESS) {
-                val anchorId = cloudAnchor.cloudAnchorId
-                val userId = FirebaseAuth.getInstance().currentUser?.uid
-                saveAnchorToFirebase(userId, anchorId, "Living room setup")
+        // Runnable to check the cloud anchor state periodically
+        val checkStateRunnable = object : Runnable {
+            override fun run() {
+                when (cloudAnchor.cloudAnchorState) {
+                    Anchor.CloudAnchorState.SUCCESS -> {
+                        // Cloud Anchor hosted successfully
+                        val cloudAnchorId = cloudAnchor.cloudAnchorId
+                        val userId = FirebaseAuth.getInstance().currentUser?.uid
+                        saveAnchorToFirebase(userId, cloudAnchorId, "Anchor hosted successfully")
+                        Toast.makeText(this@ARScreen, "Cloud Anchor hosted successfully!", Toast.LENGTH_SHORT).show()
+                        handler.removeCallbacks(this) // Stop the timeout checking
+                    }
+                    Anchor.CloudAnchorState.ERROR_NOT_AUTHORIZED -> {
+                        Toast.makeText(this@ARScreen, "Authorization error!", Toast.LENGTH_SHORT).show()
+                        handler.removeCallbacks(this) // Stop the timeout checking
+                    }
+                    Anchor.CloudAnchorState.ERROR_SERVICE_UNAVAILABLE -> {
+                        Toast.makeText(this@ARScreen, "Service unavailable. Try again.", Toast.LENGTH_SHORT).show()
+                        handler.removeCallbacks(this) // Stop the timeout checking
+                    }
+                    else -> {
+                        // Check timeout
+                        if (System.currentTimeMillis() - startTime > timeout) {
+                            Toast.makeText(this@ARScreen, "Hosting timed out. Please try again.", Toast.LENGTH_SHORT).show()
+                            handler.removeCallbacks(this) // Stop further retries
+                        } else {
+                            // Retry checking the anchor state
+                            handler.postDelayed(this, 1000) // Check every second
+                        }
+                    }
+                }
             }
         }
+
+        // Start the periodic state check
+        handler.post(checkStateRunnable)
     }
 
     private fun resolveCloudAnchor(anchorId: String) {
@@ -181,6 +270,7 @@ class ARScreen : AppCompatActivity() {
     }
 
     private fun monitorCloudAnchorState(anchor: Anchor) {
+        // Monitor the state of the anchor and display status messages accordingly
         when (anchor.cloudAnchorState) {
             Anchor.CloudAnchorState.SUCCESS -> {
                 Toast.makeText(this, "Cloud Anchor hosted/resolved!", Toast.LENGTH_SHORT).show()
@@ -204,6 +294,8 @@ class ARScreen : AppCompatActivity() {
             return
         }
 
+        Log.d("ARScreen", "Saving anchor: UserId=$userId, AnchorId=$anchorId, Description=$description")
+
         val db = FirebaseFirestore.getInstance()
         val anchorData = mapOf(
             "uid" to userId,
@@ -216,57 +308,33 @@ class ARScreen : AppCompatActivity() {
             .addOnSuccessListener {
                 Toast.makeText(this, "Anchor saved successfully!", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Error saving anchor: ${e.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to save anchor.", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun captureScreenshotAndUpload() {
-        try {
-            // Capture the bitmap of the AR scene
-            val bitmap = Bitmap.createBitmap(sceneView.width, sceneView.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            sceneView.draw(canvas)  // Make sure this draws the AR scene to the bitmap
+        val bitmap = captureScreenshot()
+        uploadImage(bitmap)
+    }
 
-            // Compress the bitmap into a byte array
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
-            val data = baos.toByteArray()
+    private fun captureScreenshot(): Bitmap {
+        val bitmap = Bitmap.createBitmap(sceneView.width, sceneView.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        sceneView.draw(canvas)
+        return bitmap
+    }
 
-            // Call the function to upload the image data
-            uploadToFirebase(data)
-        } catch (e: Exception) {
-            Log.e("ARScreen", "Error capturing screenshot: ${e.message}")
+    private fun uploadImage(bitmap: Bitmap) {
+        val storageReference: StorageReference = FirebaseStorage.getInstance().reference.child("images/${UUID.randomUUID()}.png")
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+        val data = byteArrayOutputStream.toByteArray()
+
+        storageReference.putBytes(data).addOnSuccessListener {
+            Toast.makeText(this, "Screenshot uploaded!", Toast.LENGTH_SHORT).show()
+        }.addOnFailureListener {
+            Toast.makeText(this, "Failed to upload image.", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun uploadToFirebase(imageData: ByteArray) {
-        try {
-            // Get Firebase Storage reference
-            val storageReference: StorageReference = FirebaseStorage.getInstance().reference
-            val imageRef = storageReference.child("images/${UUID.randomUUID()}.png")
-
-            // Upload the image data to Firebase Storage
-            val uploadTask = imageRef.putBytes(imageData)
-
-            // Success and Failure Listeners
-            uploadTask.addOnSuccessListener {
-                Log.d("ARScreen", "Image uploaded successfully.")
-            }.addOnFailureListener { exception ->
-                Log.e("ARScreen", "Image upload failed: ${exception.message}")
-            }
-        } catch (e: Exception) {
-            Log.e("ARScreen", "Error uploading image: ${e.message}")
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mediaPlayer.stop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mediaPlayer.release()
     }
 }

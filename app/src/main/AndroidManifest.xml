@@ -1,7 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.arcore">
 
+
+    <!-- API Key for ARCore -->
+    <meta-data
+        android:name="com.google.android.ar.API_KEY"
+        android:value="AIzaSyCBDhQaMg4rOE95Avu_AUtkmTzaWVQoNnk" />
+
+    <!-- ARCore required features (directly under the manifest) -->
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="true" />
+    <uses-feature android:name="android.software.device_admin" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.accelerometer" />
+    <uses-feature android:name="android.hardware.sensor.gyroscope" />
+
+    <!-- Permissions required for ARCore and Firebase -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Application element -->
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,6 +33,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Arcore"
         tools:targetApi="31">
+        <meta-data android:name="ARCORE_API_KEY" android:value="AIzaSyDPqsJZEodz7gsbFeqG7-T4-iWcpue0JU4"/>
 
         <!-- Main Activity -->
         <activity
@@ -23,7 +46,13 @@
         </activity>
 
         <!-- ARScreen Activity -->
-        <activity android:name=".ARScreen" android:exported="true" />
+        <activity
+            android:name=".ARScreen"
+            android:exported="true"
+            android:label="ARScreen"
+            android:theme="@style/Theme.Arcore"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTask" />
 
     </application>
 
