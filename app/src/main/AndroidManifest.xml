@@ -32,8 +32,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Arcore"
-        tools:targetApi="31">
-        <meta-data android:name="ARCORE_API_KEY" android:value="AIzaSyDPqsJZEodz7gsbFeqG7-T4-iWcpue0JU4"/>
+        tools:targetApi="34">
+
 
         <!-- Main Activity -->
         <activity

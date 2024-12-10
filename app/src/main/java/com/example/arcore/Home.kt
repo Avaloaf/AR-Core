@@ -1,5 +1,6 @@
 package com.example.arcore
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -78,6 +79,12 @@ fun HomePageScreen(navController: NavController) {
                 FirebaseManager.fetchLatestAnchorId(
                     onSuccess = { anchorId ->
                         isLoading = false
+                        // Print out the actual anchor ID
+                        Log.d("ARScreen", "Joined Cloud Anchor with ID: $anchorId")
+
+                        // You can also show a Toast with the anchor ID
+                        Toast.makeText(navController.context, "Joined Cloud Anchor ID: $anchorId", Toast.LENGTH_SHORT).show()
+
                         // Navigate to ARScreen and pass the anchorId
                         navController.navigate("ar_screen?anchorId=$anchorId")
                     },
