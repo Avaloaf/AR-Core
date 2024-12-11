@@ -154,7 +154,8 @@ class ARScreen : AppCompatActivity() {
             if (hitTestResults.isNotEmpty()) {
                 val hitResult = hitTestResults[0]  // Pick the first valid hit result
                 val pose = hitResult.hitPose
-                currentAnchor = session.createAnchor(pose)  // Create the anchor and assign it to currentAnchor
+                currentAnchor =
+                    session.createAnchor(pose)  // Create the anchor and assign it to currentAnchor
 
                 // Create a new ArModelNode and associate it with the newly created anchor
                 modelNode.anchor = currentAnchor
@@ -167,7 +168,8 @@ class ARScreen : AppCompatActivity() {
                 isModelPlaced = true
             } else {
                 // Show a failure message using a Toast
-                Toast.makeText(this, "Failed to place anchor. Try again.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to place anchor. Try again.", Toast.LENGTH_SHORT)
+                    .show()
             }
         } else {
             Log.e("ARScreen", "AR session is not initialized yet!")
@@ -218,7 +220,11 @@ class ARScreen : AppCompatActivity() {
     private fun selectModel(index: Int) {
         if (index in modelList.indices) {
             selectedModelIndex = index
-            Toast.makeText(this, "Selected Model: ${modelList[selectedModelIndex]}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Selected Model: ${modelList[selectedModelIndex]}",
+                Toast.LENGTH_SHORT
+            ).show()
             loadModel(modelList[selectedModelIndex])
         }
     }
@@ -229,24 +235,46 @@ class ARScreen : AppCompatActivity() {
         val ttlDays = 365
 
         // Host the cloud anchor asynchronously with ttlDays and a BiConsumer callback
-        session.hostCloudAnchorAsync(anchor, ttlDays, BiConsumer { cloudAnchorId, cloudAnchorState ->
-            when (cloudAnchorState) {
-                Anchor.CloudAnchorState.SUCCESS -> {
-                    val userId = FirebaseAuth.getInstance().currentUser?.uid
-                    saveAnchorId(userId, cloudAnchorId, "Anchor hosted successfully")
-                    Toast.makeText(this@ARScreen, "Cloud Anchor hosted successfully!", Toast.LENGTH_SHORT).show()
+        session.hostCloudAnchorAsync(
+            anchor,
+            ttlDays,
+            BiConsumer { cloudAnchorId, cloudAnchorState ->
+                when (cloudAnchorState) {
+                    Anchor.CloudAnchorState.SUCCESS -> {
+                        val userId = FirebaseAuth.getInstance().currentUser?.uid
+                        saveAnchorId(userId, cloudAnchorId, "Anchor hosted successfully")
+                        Toast.makeText(
+                            this@ARScreen,
+                            "Cloud Anchor hosted successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    Anchor.CloudAnchorState.ERROR_NOT_AUTHORIZED -> {
+                        Toast.makeText(
+                            this@ARScreen,
+                            "Authorization error hosting anchor!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    Anchor.CloudAnchorState.ERROR_SERVICE_UNAVAILABLE -> {
+                        Toast.makeText(
+                            this@ARScreen,
+                            "Cloud Anchor service unavailable!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    else -> {
+                        Toast.makeText(
+                            this@ARScreen,
+                            "Cloud Anchor failed to host.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-                Anchor.CloudAnchorState.ERROR_NOT_AUTHORIZED -> {
-                    Toast.makeText(this@ARScreen, "Authorization error hosting anchor!", Toast.LENGTH_SHORT).show()
-                }
-                Anchor.CloudAnchorState.ERROR_SERVICE_UNAVAILABLE -> {
-                    Toast.makeText(this@ARScreen, "Cloud Anchor service unavailable!", Toast.LENGTH_SHORT).show()
-                }
-                else -> {
-                    Toast.makeText(this@ARScreen, "Cloud Anchor failed to host.", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
+            })
     }
 
     // Resolve Cloud Anchor asynchronously with a BiConsumer callback
@@ -255,17 +283,36 @@ class ARScreen : AppCompatActivity() {
         session.resolveCloudAnchorAsync(anchorId, BiConsumer { resolvedAnchorId, cloudAnchorState ->
             when (cloudAnchorState) {
                 Anchor.CloudAnchorState.SUCCESS -> {
-                    Toast.makeText(this@ARScreen, "Cloud Anchor resolved successfully!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ARScreen,
+                        "Cloud Anchor resolved successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     // Optionally, set resolvedAnchorId or further processing
                 }
+
                 Anchor.CloudAnchorState.ERROR_NOT_AUTHORIZED -> {
-                    Toast.makeText(this@ARScreen, "Authorization error resolving anchor!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ARScreen,
+                        "Authorization error resolving anchor!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
+
                 Anchor.CloudAnchorState.ERROR_SERVICE_UNAVAILABLE -> {
-                    Toast.makeText(this@ARScreen, "Cloud Anchor service unavailable during resolution!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ARScreen,
+                        "Cloud Anchor service unavailable during resolution!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
+
                 else -> {
-                    Toast.makeText(this@ARScreen, "Failed to resolve Cloud Anchor.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ARScreen,
+                        "Failed to resolve Cloud Anchor.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         })
@@ -293,45 +340,81 @@ class ARScreen : AppCompatActivity() {
                 Toast.makeText(this, "Anchor saved successfully!", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Error saving anchor: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Error saving anchor: ${e.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
-    // Capture a screenshot of the AR view
     private fun captureScreenshotAndUpload() {
         val screenshot = captureScreenshot(sceneView)
         if (screenshot != null) {
-            // Proceed to upload the screenshot to Firebase Storage
             val byteArrayOutputStream = ByteArrayOutputStream()
             screenshot.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
             val byteArray = byteArrayOutputStream.toByteArray()
 
-            val storageReference: StorageReference =
-                FirebaseStorage.getInstance().getReference("screenshots/${UUID.randomUUID()}.jpg")
+            val userId = FirebaseAuth.getInstance().currentUser?.uid
+            if (userId != null) {
+                // Use the UID to create a subfolder for each user
+                val fileName = "${UUID.randomUUID()}.jpg"
+                val storageReference: StorageReference =
+                    FirebaseStorage.getInstance().getReference("images/$userId/$fileName")
 
-            storageReference.putBytes(byteArray).addOnSuccessListener {
-                Toast.makeText(this, "Screenshot uploaded successfully!", Toast.LENGTH_SHORT).show()
-            }.addOnFailureListener {
-                Toast.makeText(this, "Failed to upload screenshot!", Toast.LENGTH_SHORT).show()
+                storageReference.putBytes(byteArray).addOnSuccessListener {
+                    storageReference.downloadUrl.addOnSuccessListener { downloadUrl ->
+                        saveScreenshotMetadataToFirestore(downloadUrl.toString(), fileName, userId)
+                    }.addOnFailureListener { e ->
+                        Toast.makeText(
+                            this,
+                            "Failed to get download URL: ${e.localizedMessage}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }.addOnFailureListener {
+                    Toast.makeText(this, "Failed to upload screenshot!", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "User not authenticated!", Toast.LENGTH_SHORT).show()
             }
         } else {
             Toast.makeText(this, "Failed to capture screenshot!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Capture screenshot from a View (in this case, the AR scene view)
+    private fun saveScreenshotMetadataToFirestore(downloadUrl: String, fileName: String, userId: String) {
+        val firestore = FirebaseFirestore.getInstance()
+        val screenshotData = mapOf(
+            "userId" to userId,
+            "fileName" to fileName,
+            "downloadUrl" to downloadUrl,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        firestore.collection("screenshots").add(screenshotData)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Screenshot metadata saved successfully!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    this,
+                    "Failed to save screenshot metadata: ${e.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+    }
+
+
     private fun captureScreenshot(view: View): Bitmap? {
-        try {
-            // Create a Bitmap with the same size as the view
+        return try {
             val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-
-            // Draw the view's content onto the canvas
             view.draw(canvas)
-            return bitmap
+            bitmap
         } catch (e: Exception) {
             Log.e("ARScreen", "Error capturing screenshot: ${e.localizedMessage}")
-            return null
+            null
         }
     }
 }

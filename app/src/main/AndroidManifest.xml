@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.arcore">
 
-
     <!-- API Key for ARCore -->
     <meta-data
         android:name="com.google.android.ar.API_KEY"
@@ -19,6 +18,7 @@
     <!-- Permissions required for ARCore and Firebase -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- Application element -->
     <application
@@ -30,7 +30,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Arcore"
         tools:targetApi="34">
-
 
         <!-- Main Activity -->
         <activity
@@ -50,7 +49,6 @@
             android:theme="@style/Theme.Arcore"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:launchMode="singleTask" />
-
     </application>
 
 </manifest>

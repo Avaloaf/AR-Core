@@ -77,5 +77,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.1")
     implementation("io.github.sceneview:arsceneview:0.10.0")
     implementation("com.google.android.gms:play-services-auth:16.0.1")
+    implementation("com.squareup.picasso:picasso:2.71828")
+    implementation("io.coil-kt:coil-compose:2.0.0")
+
 
 }
