@@ -76,5 +76,6 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.1")
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.1")
     implementation("io.github.sceneview:arsceneview:0.10.0")
+    implementation("com.google.android.gms:play-services-auth:16.0.1")
 
 }

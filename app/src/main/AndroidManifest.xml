@@ -7,7 +7,7 @@
     <!-- API Key for ARCore -->
     <meta-data
         android:name="com.google.android.ar.API_KEY"
-        android:value="AIzaSyCBDhQaMg4rOE95Avu_AUtkmTzaWVQoNnk" />
+        android:value="AIzaSyDPqsJZEodz7gsbFeqG7-T4-iWcpue0JU4" />
 
     <!-- ARCore required features (directly under the manifest) -->
     <uses-feature android:name="android.hardware.camera" android:required="true" />
@@ -19,9 +19,6 @@
     <!-- Permissions required for ARCore and Firebase -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- Application element -->
     <application
